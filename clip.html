@@ -5,9 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Logidma - Promo Cinematográfica con Redes</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;900&family=Playfair+Display:ital,wght@0,400;0,600;1,400;1,600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <style>
     :root {
-        --bg-color: #020202; 
+        --bg-color: #020202;
         --brand-blue: #058BDF;
         --brand-neon: #ccff00;
         --text-light: #ffffff;
@@ -20,27 +21,31 @@
         width: 100%; height: 100vh;
         background-color: var(--bg-color);
         font-family: 'Inter', sans-serif;
-        overflow: hidden; 
+        overflow: hidden;
         display: flex; justify-content: center; align-items: center;
         color: var(--text-light);
+    }
+
+    /* Barra de progreso cinematográfica */
+    #progress-bar {
+        position: fixed; bottom: 0; left: 0; height: 2px; width: 100%;
+        background: linear-gradient(90deg, var(--brand-blue), var(--brand-neon));
+        opacity: 0;
+        transform: scaleX(0);
+        transform-origin: left center;
+        will-change: transform, opacity;
+        z-index: 100;
     }
 
     /* Fondo Parallax Dinámico */
     .bg-grid {
         position: absolute; width: 200%; height: 200%; top: -50%; left: -50%;
-        background-image: 
+        background-image:
             linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
             linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
         background-size: 50px 50px;
-        transform: perspective(500px) rotateX(45deg) translateY(0);
         opacity: 0.5; z-index: 0;
-    }
-    .playing .bg-grid {
-        animation: gridPan 20s linear infinite;
-    }
-    @keyframes gridPan {
-        0% { transform: perspective(500px) rotateX(45deg) translateY(0); }
-        100% { transform: perspective(500px) rotateX(45deg) translateY(50px); }
+        will-change: transform;
     }
 
     /* Sombra profunda en bordes */
@@ -59,7 +64,7 @@
     #start-screen {
         position: absolute; top: 0; left: 0; width: 100%; height: 100%;
         background: #000; z-index: 100; display: flex; flex-direction: column;
-        justify-content: center; align-items: center; transition: opacity 0.5s;
+        justify-content: center; align-items: center;
     }
     #start-btn {
         background: var(--brand-neon); color: #000; border: none; padding: 18px 40px;
@@ -70,47 +75,27 @@
     #start-btn:active { transform: scale(0.95); }
 
     /* ================= LOGO ANIMADO ================= */
+    /* GSAP establece posición y escala vía gsap.set() — no transform aquí */
     .logo-container {
         position: absolute; top: 50%; left: 50%;
-        transform: translate(-50%, -50%) scale(1.2);
         width: 70%; max-width: 340px;
-        transition: transform 1.8s cubic-bezier(0.16, 1, 0.3, 1), opacity 1s;
-        z-index: 20; opacity: 0; filter: drop-shadow(0 0 0px rgba(5, 139, 223, 0));
-    }
-
-    /* El logo se desplaza arriba (modo header) */
-    .playing .logo-container.header-pos {
-        transform: translate(-50%, -42vh) scale(0.35);
-        opacity: 0.8;
-    }
-    
-    /* El logo vuelve inmenso al final */
-    .playing .logo-container.climax-pos {
-        transform: translate(-50%, -35vh) scale(0.65);
-        opacity: 1; filter: drop-shadow(0 0 50px rgba(5, 139, 223, 0.8));
+        z-index: 20; opacity: 0;
+        will-change: transform, opacity;
     }
 
     .brand-logo { width: 100%; height: auto; display: block; }
-    
+
+    /* Estado inicial FOUC: stroke visible en CSS para que draw funcione */
     .bl-outline {
-        fill: none; stroke: var(--brand-blue); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round;
+        fill: none; stroke: var(--brand-blue); stroke-width: 2.4;
+        stroke-linecap: round; stroke-linejoin: round;
         stroke-dasharray: 1; stroke-dashoffset: 1;
-    }
-    .playing .bl-outline {
-        animation: drawSvg 2.5s cubic-bezier(0.65, 0, 0.35, 1) forwards,
-                   fadeOutSvg 0.5s ease-out 3s forwards;
     }
 
     .bl-fill {
         fill: var(--brand-blue); opacity: 0;
+        will-change: opacity;
     }
-    .playing .bl-fill {
-        animation: fadeInSvg 1.5s cubic-bezier(0.16, 1, 0.3, 1) 2.5s forwards;
-    }
-
-    @keyframes drawSvg { to { stroke-dashoffset: 0; } }
-    @keyframes fadeOutSvg { to { opacity: 0; } }
-    @keyframes fadeInSvg { to { opacity: 1; filter: drop-shadow(0 0 20px rgba(5,139,223,0.5)); } }
 
     /* ================= SISTEMA DE TEXTO CINEMÁTICO ================= */
     .scenes-wrapper {
@@ -125,59 +110,53 @@
     }
 
     /* Enmascaramiento de texto (Efecto After Effects) */
+    /* FOUC: elementos invisibles y fuera del área visible hasta que GSAP los anime */
     .mask { overflow: hidden; position: relative; margin-bottom: 5px; }
     .mask-text {
-        display: block; transform: translateY(110%);
-        transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 1s;
+        display: block;
+        transform: translateY(110%);
         opacity: 0;
+        will-change: transform, opacity;
     }
-    
-    /* Cuando la escena está activa, los textos suben */
-    .scene.active .mask-text { transform: translateY(0); opacity: 1; }
-    /* Cuando salen, se deslizan suavemente hacia arriba y se desvanecen */
-    .scene.exit .mask-text { transform: translateY(-100%); opacity: 0; transition: transform 0.8s ease-in, opacity 0.5s; }
-
-    /* Retrasos en cascada para fluidez */
-    .delay-1 { transition-delay: 0.1s; }
-    .delay-2 { transition-delay: 0.2s; }
-    .delay-3 { transition-delay: 0.3s; }
-    .delay-4 { transition-delay: 0.4s; }
-    .delay-5 { transition-delay: 0.5s; }
-    .delay-6 { transition-delay: 0.6s; }
 
     /* Estilos Tipográficos */
     .font-serif { font-family: 'Playfair Display', serif; }
     .font-sans { font-family: 'Inter', sans-serif; }
-    
+
     .text-hook { font-size: 2.6rem; font-weight: 300; line-height: 1.1; letter-spacing: -1px; }
     .text-neon { color: var(--brand-neon); }
     .text-blue { color: var(--brand-blue); }
-    
+
     .tagline { font-size: 0.85rem; letter-spacing: 5px; color: var(--text-dim); text-transform: uppercase; font-weight: 700; margin-bottom: 15px; }
     .service-title { font-size: 3.2rem; font-weight: 700; line-height: 1; margin: 5px 0; }
     .service-desc { font-size: 1.1rem; color: #a0aab5; font-weight: 300; line-height: 1.5; margin-top: 15px; }
 
+    /* Línea de acento por servicio — GPU: solo scaleX */
+    .accent-line {
+        width: 40px; height: 2px;
+        background: var(--brand-neon);
+        transform: scaleX(0);
+        transform-origin: left center;
+        margin-top: 12px;
+        will-change: transform;
+    }
+
     /* ================= TEAM REVEAL ================= */
     .team-grid { margin-top: 20px; display: flex; flex-direction: column; gap: 25px; }
-    .t-member { 
+    /* FOUC: posición y opacidad inicial — GSAP anima solo transform y opacity */
+    .t-member {
         border-left: 2px solid var(--brand-neon); padding-left: 20px;
-        transform: translateX(-30px); opacity: 0; filter: blur(5px);
-        transition: all 1s cubic-bezier(0.16, 1, 0.3, 1);
+        transform: translateX(-30px); opacity: 0;
+        will-change: transform, opacity;
     }
-    .scene.active .t-member { transform: translateX(0); opacity: 1; filter: blur(0); }
-    .scene.exit .t-member { transform: translateX(30px); opacity: 0; }
-    
-    .scene.active .t-member:nth-child(1) { transition-delay: 0.2s; }
-    .scene.active .t-member:nth-child(2) { transition-delay: 0.4s; }
-    .scene.active .t-member:nth-child(3) { transition-delay: 0.6s; }
 
     .t-role { font-size: 0.7rem; letter-spacing: 2px; color: var(--brand-neon); font-weight: 700; margin-bottom: 5px; text-transform: uppercase;}
     .t-name { font-size: 1.5rem; font-weight: 400; margin: 0; }
 
     /* ================= CLÍMAX, FECHA, REDES ================= */
     .climax-date { font-size: 4.5rem; font-weight: 900; line-height: 0.85; text-transform: uppercase; }
-    
-    .social-row { 
+
+    .social-row {
         display: flex; align-items: center; justify-content: center; gap: 15px;
         margin-top: 20px; color: var(--text-dim);
     }
@@ -189,14 +168,14 @@
     .flash {
         position: absolute; top: 0; left: 0; width: 100%; height: 100%;
         background: white; opacity: 0; z-index: 50; pointer-events: none;
+        will-change: opacity;
     }
-    .flash-anim { animation: flashEffect 1.5s ease-out; }
-    @keyframes flashEffect { 0% { opacity: 1; } 100% { opacity: 0; } }
 
 </style>
 </head>
 <body>
 
+<div id="progress-bar"></div>
 <div class="bg-grid"></div>
 <div class="vignette"></div>
 <div class="flash" id="flash-fx"></div>
@@ -206,7 +185,7 @@
 </div>
 
 <div class="video-container" id="video-container">
-    
+
     <!-- LOGO SVG -->
     <div class="logo-container" id="logo">
         <svg class="brand-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1980 1980" fill-rule="evenodd">
@@ -216,38 +195,41 @@
 
     <!-- ESCENAS DE TEXTO -->
     <div class="scenes-wrapper">
-        
+
         <!-- EL GANCHO -->
         <div class="scene" id="s-1">
-            <div class="mask"><span class="mask-text text-hook font-sans text-neon delay-1">Sistemas lentos.</span></div>
-            <div class="mask"><span class="mask-text text-hook font-sans delay-2">Riesgos ocultos.</span></div>
-            <div class="mask"><span class="mask-text text-hook font-sans delay-3">Es hora de escalar.</span></div>
+            <div class="mask"><span class="mask-text text-hook font-sans text-neon">Sistemas lentos.</span></div>
+            <div class="mask"><span class="mask-text text-hook font-sans">Riesgos ocultos.</span></div>
+            <div class="mask"><span class="mask-text text-hook font-sans">Es hora de escalar.</span></div>
         </div>
 
         <!-- SERVICIO 1 -->
         <div class="scene" id="s-2">
-            <div class="mask"><span class="mask-text tagline delay-1 text-dim">01 / Infraestructura</span></div>
-            <div class="mask"><span class="mask-text service-title font-serif text-blue delay-2" style="font-style: italic;">Workspace</span></div>
-            <div class="mask"><span class="mask-text service-desc font-sans delay-3">Tu equipo en una sola nube corporativa. Permisos atados y control total.</span></div>
+            <div class="mask"><span class="mask-text tagline text-dim">01 / Infraestructura</span></div>
+            <div class="mask"><span class="mask-text service-title font-serif text-blue" style="font-style: italic;">Workspace</span></div>
+            <div class="mask"><span class="mask-text service-desc font-sans">Tu equipo en una sola nube corporativa. Permisos atados y control total.</span></div>
+            <div class="accent-line" id="al-2"></div>
         </div>
 
         <!-- SERVICIO 2 -->
         <div class="scene" id="s-3">
-            <div class="mask"><span class="mask-text tagline delay-1 text-dim">02 / Procesos</span></div>
-            <div class="mask"><span class="mask-text service-title font-sans text-neon delay-2">Automatización</span></div>
-            <div class="mask"><span class="mask-text service-desc font-sans delay-3">Python + Apps Script. Adiós a las tareas manuales y hojas de cálculo rotas.</span></div>
+            <div class="mask"><span class="mask-text tagline text-dim">02 / Procesos</span></div>
+            <div class="mask"><span class="mask-text service-title font-sans text-neon">Automatización</span></div>
+            <div class="mask"><span class="mask-text service-desc font-sans">Python + Apps Script. Adiós a las tareas manuales y hojas de cálculo rotas.</span></div>
+            <div class="accent-line" id="al-3"></div>
         </div>
 
         <!-- SERVICIO 3 -->
         <div class="scene" id="s-4">
-            <div class="mask"><span class="mask-text tagline delay-1 text-dim">03 / Protección</span></div>
-            <div class="mask"><span class="mask-text service-title font-serif delay-2">Blindaje Legal TI</span></div>
-            <div class="mask"><span class="mask-text service-desc font-sans delay-3">Cuidamos tu operación ante clientes y proveedores.</span></div>
+            <div class="mask"><span class="mask-text tagline text-dim">03 / Protección</span></div>
+            <div class="mask"><span class="mask-text service-title font-serif">Blindaje Legal TI</span></div>
+            <div class="mask"><span class="mask-text service-desc font-sans">Cuidamos tu operación ante clientes y proveedores.</span></div>
+            <div class="accent-line" id="al-4"></div>
         </div>
 
         <!-- EL EQUIPO (Directorio) -->
         <div class="scene" id="s-5">
-            <div class="mask"><span class="mask-text tagline delay-1 text-neon">Los arquitectos de tu escalabilidad</span></div>
+            <div class="mask"><span class="mask-text tagline text-neon">Los arquitectos de tu escalabilidad</span></div>
             <div class="team-grid">
                 <div class="t-member">
                     <div class="t-role">// CEO</div>
@@ -266,17 +248,17 @@
 
         <!-- CLÍMAX Y REDES -->
         <div class="scene" id="s-6" style="text-align: center;">
-            <div class="mask"><span class="mask-text text-neon tagline delay-1" style="margin-bottom: 5px;">PRÓXIMAMENTE</span></div>
-            <div class="mask"><span class="mask-text climax-date font-sans delay-2">15 DE<br>JUNIO</span></div>
-            
+            <div class="mask"><span class="mask-text text-neon tagline" style="margin-bottom: 5px;">PRÓXIMAMENTE</span></div>
+            <div class="mask"><span class="mask-text climax-date font-sans">15 DE<br>JUNIO</span></div>
+
             <!-- Web CTA -->
             <div class="mask" style="margin-top: 25px;">
-                <span class="mask-text delay-4 font-serif text-blue website-glow" style="font-size: 2.2rem; font-style: italic;">logidma.com</span>
+                <span class="mask-text font-serif text-blue website-glow" style="font-size: 2.2rem; font-style: italic;">logidma.com</span>
             </div>
-            
+
             <!-- Iconos de Redes -->
             <div class="mask">
-                <div class="mask-text social-row delay-5">
+                <div class="mask-text social-row">
                     <!-- Instagram -->
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
                     <!-- LinkedIn -->
@@ -285,83 +267,130 @@
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5v3a3 3 0 0 1-3-3 9 9 0 0 1-9 9z"></path><path d="M15 2v10a3 3 0 1 1-6 0"></path></svg>
                     <!-- Facebook -->
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
-                    
+
                     <span class="social-handle">@LOGIDMA</span>
                 </div>
             </div>
-            
-            <div class="mask"><span class="mask-text delay-6" style="margin-top: 15px; font-weight:300; font-size: 0.85rem; letter-spacing:1px; color:#888;">Desde Morelia para todo México.</span></div>
+
+            <div class="mask"><span class="mask-text" style="margin-top: 15px; font-weight:300; font-size: 0.85rem; letter-spacing:1px; color:#888;">Desde Morelia para todo México.</span></div>
         </div>
 
     </div>
 </div>
 
 <script>
+// ── ESTADOS INICIALES GPU (corre antes del clic, previene FOUC) ──
+gsap.set('.bg-grid',    { transformPerspective: 500, rotationX: 45, y: 0 });
+gsap.set('#logo',       { xPercent: -50, yPercent: -50, scale: 1.2, opacity: 0 });
+gsap.set('.mask-text',  { y: '110%', opacity: 0 });
+gsap.set('.t-member',   { x: -30, opacity: 0 });
+gsap.set('.bl-outline', { strokeDashoffset: 1 });
+gsap.set('.bl-fill',    { opacity: 0 });
+gsap.set('#flash-fx',   { opacity: 0 });
+gsap.set('.accent-line',{ scaleX: 0 });
+gsap.set('#progress-bar', { opacity: 0, scaleX: 0 });
+
 document.getElementById('start-btn').addEventListener('click', () => {
-    // 1. Quitar pantalla de inicio
-    document.getElementById('start-screen').style.opacity = '0';
-    setTimeout(() => { document.getElementById('start-screen').style.display = 'none'; }, 500);
 
-    // 2. Encender clase "playing" para activar CSS
-    const container = document.getElementById('video-container');
-    container.classList.add('playing');
-    
-    // Revelar logo sutilmente
-    const logo = document.getElementById('logo');
-    logo.style.opacity = '1';
+    // Desvanece la pantalla de inicio
+    gsap.to('#start-screen', {
+        opacity: 0, duration: 0.5, ease: 'power4.out',
+        onComplete: () => { document.getElementById('start-screen').style.display = 'none'; }
+    });
 
-    // Función de transición de escenas
-    const playScene = (idIn, idOut, delay) => {
-        setTimeout(() => {
-            if(idOut) {
-                const sOut = document.getElementById(idOut);
-                sOut.classList.remove('active');
-                sOut.classList.add('exit');
-            }
-            if(idIn) {
-                const sIn = document.getElementById(idIn);
-                sIn.classList.remove('exit');
-                sIn.classList.add('active');
-            }
-        }, delay);
-    };
+    const H = window.innerHeight;
+    const t = gsap.timeline();
 
-    // --- TIMELINE DE MOTION GRAPHICS --- //
+    // Grid pan — tween separado: repeat:-1 dentro del timeline haría duration=Infinity
+    t.call(() => {
+        gsap.to('.bg-grid', { y: 50, duration: 20, repeat: -1, ease: 'none' });
+    }, null, 0);
 
-    // 2.5s: Entra Gancho (Sistemas lentos...)
-    playScene('s-1', null, 2500);
+    // Barra de progreso (32s = duración total de la animación)
+    t.to('#progress-bar', { opacity: 1, duration: 0.3, ease: 'none' }, 0);
+    t.to('#progress-bar', { scaleX: 1, duration: 32, ease: 'none' }, 0);
 
-    // 6.0s: Logo cambia a modo "Header" y sale Gancho, entra Servicio 1
-    setTimeout(() => {
-        logo.classList.add('header-pos');
-        playScene('s-2', 's-1', 0);
-    }, 6000);
+    // ── t=0.3: Logo aparece centrado + SVG se dibuja ──
+    t.to('#logo', { opacity: 1, scale: 1, duration: 1.5, ease: 'power4.out' }, 0.3);
+    t.to('.bl-outline', { strokeDashoffset: 0, duration: 2.5, ease: 'power4.out' }, 0.3);
+    t.to('.bl-outline', { opacity: 0, duration: 0.5, ease: 'power4.out' }, 2.5);
+    t.to('.bl-fill',    { opacity: 1, duration: 1.5, ease: 'power4.out' }, 2.5);
 
-    // 10.0s: Entra Servicio 2
-    playScene('s-3', 's-2', 10000);
+    // ── t=2.5: Escena 1 entra — Gancho (3 líneas stagger) ──
+    t.to('#s-1 .mask-text', {
+        y: 0, opacity: 1, duration: 1.0, stagger: 0.12, ease: 'power4.out'
+    }, 2.5);
 
-    // 14.0s: Entra Servicio 3
-    playScene('s-4', 's-3', 14000);
+    // ── t=5.8: Escena 1 sale + Logo sube a header + Escena 2 entra ──
+    // Salida empieza 200ms antes del boundary → solapamiento intencional
+    t.to('#s-1 .mask-text', {
+        y: '-100%', opacity: 0, duration: 0.6, stagger: 0.08, ease: 'power4.in'
+    }, 5.8);
+    // Logo se mueve mientras la escena 1 aún está saliendo
+    t.to('#logo', {
+        xPercent: -50, yPercent: 0, y: -(H * 0.42),
+        scale: 0.35, opacity: 0.8, duration: 1.8, ease: 'expo.inOut'
+    }, 5.8);
+    // Escena 2: tagline → título → descripción (stagger natural = "contador primero")
+    t.to('#s-2 .mask-text', {
+        y: 0, opacity: 1, duration: 1.0, stagger: 0.12, ease: 'power4.out'
+    }, 6.0);
+    // Accent line entra mientras la descripción aún está llegando
+    t.to('#al-2', { scaleX: 1, duration: 0.6, ease: 'expo.inOut' }, 6.36);
 
-    // 18.0s: Entra EQUIPO
-    playScene('s-5', 's-4', 18000);
+    // ── t=9.8: Escena 2 sale + Escena 3 entra ──
+    t.to(['#s-2 .mask-text', '#al-2'], {
+        y: '-100%', opacity: 0, duration: 0.6, stagger: 0.08, ease: 'power4.in'
+    }, 9.8);
+    t.to('#s-3 .mask-text', {
+        y: 0, opacity: 1, duration: 1.0, stagger: 0.12, ease: 'power4.out'
+    }, 10.0);
+    t.to('#al-3', { scaleX: 1, duration: 0.6, ease: 'expo.inOut' }, 10.36);
 
-    // 24.0s: CLÍMAX (El logo baja majestuoso y estalla en luz)
-    setTimeout(() => {
-        // Flash fx
-        const fx = document.getElementById('flash-fx');
-        fx.classList.add('flash-anim');
+    // ── t=13.8: Escena 3 sale + Escena 4 entra ──
+    t.to(['#s-3 .mask-text', '#al-3'], {
+        y: '-100%', opacity: 0, duration: 0.6, stagger: 0.08, ease: 'power4.in'
+    }, 13.8);
+    t.to('#s-4 .mask-text', {
+        y: 0, opacity: 1, duration: 1.0, stagger: 0.12, ease: 'power4.out'
+    }, 14.0);
+    t.to('#al-4', { scaleX: 1, duration: 0.6, ease: 'expo.inOut' }, 14.36);
 
-        // Logo baja y brilla
-        logo.classList.remove('header-pos');
-        logo.classList.add('climax-pos');
+    // ── t=17.8: Escena 4 sale + Escena 5 entra (Equipo) ──
+    t.to(['#s-4 .mask-text', '#al-4'], {
+        y: '-100%', opacity: 0, duration: 0.6, stagger: 0.08, ease: 'power4.in'
+    }, 17.8);
+    // Tagline entra primero
+    t.to('#s-5 .mask-text', {
+        y: 0, opacity: 1, duration: 0.8, ease: 'power4.out'
+    }, 18.0);
+    // Miembros del equipo entran desde la izquierda con stagger orgánico
+    t.to('.t-member', {
+        x: 0, opacity: 1, duration: 0.9, stagger: 0.18, ease: 'power4.out'
+    }, 18.4);
 
-        // Cambio de escena a fecha, sitio web y redes sociales (con efecto cascada)
-        playScene('s-6', 's-5', 0);
-    }, 24000);
+    // ── t=23.7: Escena 5 sale + CLÍMAX ──
+    t.to('#s-5 .mask-text', {
+        y: '-100%', opacity: 0, duration: 0.5, ease: 'power4.in'
+    }, 23.7);
+    t.to('.t-member', {
+        x: 30, opacity: 0, duration: 0.4, stagger: 0.06, ease: 'power4.in'
+    }, 23.7);
 
-    // La escena de cierre y llamadas a la acción se revelan entre el 24s y 25s
-    // ¡Espera hasta el segundo 30 para detener tu grabación de pantalla!
+    // Flash de luz — peak instantáneo, caída suave
+    t.to('#flash-fx', { opacity: 1, duration: 0.15, ease: 'none' }, 24.0);
+    t.to('#flash-fx', { opacity: 0, duration: 1.5, ease: 'power4.out' }, 24.15);
+
+    // Logo se expande al clímax mientras el flash aún se desvanece (expo.inOut = dramático)
+    t.to('#logo', {
+        xPercent: -50, yPercent: 0, y: -(H * 0.35),
+        scale: 0.65, opacity: 1, duration: 2.0, ease: 'expo.inOut'
+    }, 24.0);
+
+    // Escena 6 entra escalonada: PRÓXIMAMENTE → fecha → web → redes → tagline
+    t.to('#s-6 .mask-text', {
+        y: 0, opacity: 1, duration: 1.0, stagger: 0.12, ease: 'power4.out'
+    }, 24.6);
 });
 </script>
 </body>
