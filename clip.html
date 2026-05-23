@@ -26,156 +26,190 @@
         color: var(--text-light);
     }
 
-    /* Barra de progreso cinematográfica */
+    /* ── Barra de progreso ── */
     #progress-bar {
         position: fixed; bottom: 0; left: 0; height: 2px; width: 100%;
         background: linear-gradient(90deg, var(--brand-blue), var(--brand-neon));
-        opacity: 0;
-        transform: scaleX(0);
-        transform-origin: left center;
-        will-change: transform, opacity;
-        z-index: 100;
+        opacity: 0; transform: scaleX(0); transform-origin: left center;
+        will-change: transform, opacity; z-index: 100;
     }
 
-    /* Fondo Parallax Dinámico */
+    /* ── Orbs de ambiente (depth layers) ── */
+    /* FOUC: opacity:0 hasta que GSAP las revele */
+    .orb {
+        position: fixed; border-radius: 50%;
+        pointer-events: none; z-index: 1; opacity: 0;
+        will-change: transform, opacity;
+    }
+    .orb-1 {
+        width: min(500px, 90vw); height: min(500px, 90vw);
+        background: radial-gradient(circle, rgba(5,139,223,0.13) 0%, transparent 65%);
+        top: 0; left: 0;
+    }
+    .orb-2 {
+        width: min(350px, 70vw); height: min(350px, 70vw);
+        background: radial-gradient(circle, rgba(204,255,0,0.07) 0%, transparent 65%);
+        top: 0; left: 0;
+    }
+
+    /* ── Barrido de escena (light sweep) ── */
+    #scene-sweep {
+        position: fixed; top: 0; left: 0;
+        width: 90px; height: 100vh;
+        background: linear-gradient(90deg, transparent, rgba(5,139,223,0.22), transparent);
+        pointer-events: none; opacity: 0; z-index: 9;
+        will-change: transform, opacity;
+    }
+
+    /* ── Fondo Parallax Dinámico ── */
     .bg-grid {
-        position: absolute; width: 200%; height: 200%; top: -50%; left: -50%;
+        position: absolute; width: 220%; height: 220%; top: -60%; left: -60%;
         background-image:
-            linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+            linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
         background-size: 50px 50px;
-        opacity: 0.5; z-index: 0;
+        opacity: 0.45; z-index: 0;
         will-change: transform;
     }
 
-    /* Sombra profunda en bordes */
+    /* ── Vignette ── */
     .vignette {
         position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-        background: radial-gradient(circle at center, transparent 30%, #020202 90%);
+        background: radial-gradient(ellipse at center, transparent 25%, #020202 88%);
         z-index: 10; pointer-events: none;
     }
 
+    /* ── Contenedor principal ── */
     .video-container {
         position: relative; width: 100%; max-width: 480px; height: 100%;
         display: flex; flex-direction: column; align-items: center; z-index: 15;
     }
 
-    /* ================= PANTALLA INICIO ================= */
+    /* ── Anillos de pulso (clímax) ── */
+    .pulse-ring {
+        position: absolute;
+        border-radius: 50%;
+        border: 1.5px solid rgba(5,139,223,0.55);
+        width: 90px; height: 90px;
+        top: 50%; left: 50%;
+        opacity: 0; pointer-events: none; z-index: 18;
+        will-change: transform, opacity;
+    }
+    .pulse-ring.neon { border-color: rgba(204,255,0,0.4); }
+
+    /* ── Partículas flotantes ── */
+    .particle {
+        position: absolute; border-radius: 50%;
+        pointer-events: none; z-index: 6; opacity: 0;
+        will-change: transform, opacity;
+    }
+
+    /* ── Pantalla inicio ── */
     #start-screen {
         position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-        background: #000; z-index: 100; display: flex; flex-direction: column;
-        justify-content: center; align-items: center;
+        background: #000; z-index: 100;
+        display: flex; flex-direction: column; justify-content: center; align-items: center;
     }
     #start-btn {
-        background: var(--brand-neon); color: #000; border: none; padding: 18px 40px;
-        font-size: 1.2rem; font-weight: 900; border-radius: 50px; cursor: pointer;
-        box-shadow: 0 0 40px rgba(204, 255, 0, 0.4); text-transform: uppercase;
-        letter-spacing: 1px; transition: transform 0.1s;
+        background: var(--brand-neon); color: #000; border: none;
+        padding: 18px 40px; font-size: 1.2rem; font-weight: 900;
+        border-radius: 50px; cursor: pointer;
+        box-shadow: 0 0 40px rgba(204,255,0,0.4);
+        text-transform: uppercase; letter-spacing: 1px;
+        transition: transform 0.1s;
     }
     #start-btn:active { transform: scale(0.95); }
 
-    /* ================= LOGO ANIMADO ================= */
-    /* GSAP establece posición y escala vía gsap.set() — no transform aquí */
+    /* ── Logo ── */
+    /* sin transform en CSS — GSAP lo controla todo */
     .logo-container {
         position: absolute; top: 50%; left: 50%;
         width: 70%; max-width: 340px;
         z-index: 20; opacity: 0;
         will-change: transform, opacity;
     }
-
     .brand-logo { width: 100%; height: auto; display: block; }
 
-    /* Estado inicial FOUC: stroke visible en CSS para que draw funcione */
+    /* Estado inicial FOUC para el SVG */
     .bl-outline {
         fill: none; stroke: var(--brand-blue); stroke-width: 2.4;
         stroke-linecap: round; stroke-linejoin: round;
         stroke-dasharray: 1; stroke-dashoffset: 1;
     }
+    .bl-fill { fill: var(--brand-blue); opacity: 0; will-change: opacity; }
 
-    .bl-fill {
-        fill: var(--brand-blue); opacity: 0;
-        will-change: opacity;
-    }
-
-    /* ================= SISTEMA DE TEXTO CINEMÁTICO ================= */
+    /* ── Sistema de escenas ── */
     .scenes-wrapper {
         position: absolute; top: 15vh; width: 100%; height: 75vh;
         display: flex; justify-content: center; align-items: center;
         padding: 0 35px; z-index: 10;
     }
-
     .scene {
         position: absolute; width: 100%; text-align: left;
-        pointer-events: none; display: flex; flex-direction: column; justify-content: center;
+        pointer-events: none;
+        display: flex; flex-direction: column; justify-content: center;
     }
 
-    /* Enmascaramiento de texto (Efecto After Effects) */
-    /* FOUC: elementos invisibles y fuera del área visible hasta que GSAP los anime */
+    /* Máscara de texto — FOUC: invisible y debajo del límite */
     .mask { overflow: hidden; position: relative; margin-bottom: 5px; }
     .mask-text {
         display: block;
-        transform: translateY(110%);
-        opacity: 0;
-        will-change: transform, opacity;
+        transform: translateY(110%); /* debajo del clip */
+        opacity: 0; scale: 0.95;      /* micro-scale inicial */
+        will-change: transform, opacity, scale;
     }
 
-    /* Estilos Tipográficos */
+    /* ── Tipografía adaptativa ── */
     .font-serif { font-family: 'Playfair Display', serif; }
-    .font-sans { font-family: 'Inter', sans-serif; }
+    .font-sans  { font-family: 'Inter', sans-serif; }
 
-    .text-hook { font-size: 2.6rem; font-weight: 300; line-height: 1.1; letter-spacing: -1px; }
-    .text-neon { color: var(--brand-neon); }
-    .text-blue { color: var(--brand-blue); }
+    .text-hook     { font-size: clamp(2rem, 5.5vw, 2.6rem); font-weight: 300; line-height: 1.1; letter-spacing: -1px; }
+    .text-neon     { color: var(--brand-neon); }
+    .text-blue     { color: var(--brand-blue); }
+    .tagline       { font-size: clamp(0.7rem, 2vw, 0.85rem); letter-spacing: 5px; color: var(--text-dim); text-transform: uppercase; font-weight: 700; margin-bottom: 15px; }
+    .service-title { font-size: clamp(2.4rem, 7vw, 3.2rem); font-weight: 700; line-height: 1; margin: 5px 0; }
+    .service-desc  { font-size: clamp(0.95rem, 2.5vw, 1.1rem); color: #a0aab5; font-weight: 300; line-height: 1.5; margin-top: 15px; }
 
-    .tagline { font-size: 0.85rem; letter-spacing: 5px; color: var(--text-dim); text-transform: uppercase; font-weight: 700; margin-bottom: 15px; }
-    .service-title { font-size: 3.2rem; font-weight: 700; line-height: 1; margin: 5px 0; }
-    .service-desc { font-size: 1.1rem; color: #a0aab5; font-weight: 300; line-height: 1.5; margin-top: 15px; }
-
-    /* Línea de acento por servicio — GPU: solo scaleX */
+    /* ── Accent line ── */
     .accent-line {
         width: 40px; height: 2px;
         background: var(--brand-neon);
-        transform: scaleX(0);
-        transform-origin: left center;
-        margin-top: 12px;
-        will-change: transform;
+        transform: scaleX(0); transform-origin: left center;
+        margin-top: 12px; will-change: transform;
     }
 
-    /* ================= TEAM REVEAL ================= */
+    /* ── Team ── */
     .team-grid { margin-top: 20px; display: flex; flex-direction: column; gap: 25px; }
-    /* FOUC: posición y opacidad inicial — GSAP anima solo transform y opacity */
     .t-member {
         border-left: 2px solid var(--brand-neon); padding-left: 20px;
-        transform: translateX(-30px); opacity: 0;
-        will-change: transform, opacity;
+        transform: translateX(-30px); opacity: 0; scale: 0.97;
+        will-change: transform, opacity, scale;
     }
+    .t-role { font-size: 0.7rem; letter-spacing: 2px; color: var(--brand-neon); font-weight: 700; margin-bottom: 5px; text-transform: uppercase; }
+    .t-name { font-size: clamp(1.3rem, 3.5vw, 1.5rem); font-weight: 400; margin: 0; }
 
-    .t-role { font-size: 0.7rem; letter-spacing: 2px; color: var(--brand-neon); font-weight: 700; margin-bottom: 5px; text-transform: uppercase;}
-    .t-name { font-size: 1.5rem; font-weight: 400; margin: 0; }
-
-    /* ================= CLÍMAX, FECHA, REDES ================= */
-    .climax-date { font-size: 4.5rem; font-weight: 900; line-height: 0.85; text-transform: uppercase; }
-
-    .social-row {
-        display: flex; align-items: center; justify-content: center; gap: 15px;
-        margin-top: 20px; color: var(--text-dim);
-    }
+    /* ── Clímax ── */
+    .climax-date   { font-size: clamp(3.2rem, 9vw, 4.5rem); font-weight: 900; line-height: 0.85; text-transform: uppercase; }
+    .social-row    { display: flex; align-items: center; justify-content: center; gap: 15px; margin-top: 20px; color: var(--text-dim); }
     .social-row svg { width: 20px; height: 20px; stroke: currentColor; stroke-width: 1.5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
-    .social-handle { font-size: 0.8rem; letter-spacing: 2px; font-weight: 600; color: #fff; margin-left: 5px;}
+    .social-handle { font-size: 0.8rem; letter-spacing: 2px; font-weight: 600; color: #fff; margin-left: 5px; }
+    .website-glow  { text-shadow: 0 0 15px rgba(5,139,223,0.6); }
 
-    .website-glow { text-shadow: 0 0 15px rgba(5, 139, 223, 0.6); }
-
+    /* ── Flash ── */
     .flash {
         position: absolute; top: 0; left: 0; width: 100%; height: 100%;
         background: white; opacity: 0; z-index: 50; pointer-events: none;
         will-change: opacity;
     }
-
 </style>
 </head>
 <body>
 
+<!-- Capas de ambiente (z bajas) -->
 <div id="progress-bar"></div>
+<div class="orb orb-1" id="orb-1"></div>
+<div class="orb orb-2" id="orb-2"></div>
+<div id="scene-sweep"></div>
 <div class="bg-grid"></div>
 <div class="vignette"></div>
 <div class="flash" id="flash-fx"></div>
@@ -185,6 +219,11 @@
 </div>
 
 <div class="video-container" id="video-container">
+
+    <!-- Anillos de pulso para el clímax -->
+    <div class="pulse-ring" id="pr-1"></div>
+    <div class="pulse-ring neon" id="pr-2"></div>
+    <div class="pulse-ring" id="pr-3"></div>
 
     <!-- LOGO SVG -->
     <div class="logo-container" id="logo">
@@ -227,7 +266,7 @@
             <div class="accent-line" id="al-4"></div>
         </div>
 
-        <!-- EL EQUIPO (Directorio) -->
+        <!-- EL EQUIPO -->
         <div class="scene" id="s-5">
             <div class="mask"><span class="mask-text tagline text-neon">Los arquitectos de tu escalabilidad</span></div>
             <div class="team-grid">
@@ -250,28 +289,18 @@
         <div class="scene" id="s-6" style="text-align: center;">
             <div class="mask"><span class="mask-text text-neon tagline" style="margin-bottom: 5px;">PRÓXIMAMENTE</span></div>
             <div class="mask"><span class="mask-text climax-date font-sans">15 DE<br>JUNIO</span></div>
-
-            <!-- Web CTA -->
             <div class="mask" style="margin-top: 25px;">
-                <span class="mask-text font-serif text-blue website-glow" style="font-size: 2.2rem; font-style: italic;">logidma.com</span>
+                <span class="mask-text font-serif text-blue website-glow" style="font-size: clamp(1.8rem, 5vw, 2.2rem); font-style: italic;">logidma.com</span>
             </div>
-
-            <!-- Iconos de Redes -->
             <div class="mask">
                 <div class="mask-text social-row">
-                    <!-- Instagram -->
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
-                    <!-- LinkedIn -->
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
-                    <!-- TikTok -->
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5v3a3 3 0 0 1-3-3 9 9 0 0 1-9 9z"></path><path d="M15 2v10a3 3 0 1 1-6 0"></path></svg>
-                    <!-- Facebook -->
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
-
                     <span class="social-handle">@LOGIDMA</span>
                 </div>
             </div>
-
             <div class="mask"><span class="mask-text" style="margin-top: 15px; font-weight:300; font-size: 0.85rem; letter-spacing:1px; color:#888;">Desde Morelia para todo México.</span></div>
         </div>
 
@@ -279,117 +308,247 @@
 </div>
 
 <script>
-// ── ESTADOS INICIALES GPU (corre antes del clic, previene FOUC) ──
-gsap.set('.bg-grid',    { transformPerspective: 500, rotationX: 45, y: 0 });
-gsap.set('#logo',       { xPercent: -50, yPercent: -50, scale: 1.2, opacity: 0 });
-gsap.set('.mask-text',  { y: '110%', opacity: 0 });
-gsap.set('.t-member',   { x: -30, opacity: 0 });
-gsap.set('.bl-outline', { strokeDashoffset: 1 });
-gsap.set('.bl-fill',    { opacity: 0 });
-gsap.set('#flash-fx',   { opacity: 0 });
-gsap.set('.accent-line',{ scaleX: 0 });
-gsap.set('#progress-bar', { opacity: 0, scaleX: 0 });
+// ════════════════════════════════════════════════════════════
+//  ESTADOS INICIALES GPU — previene FOUC antes de que GSAP cargue
+// ════════════════════════════════════════════════════════════
+const VW = window.innerWidth;
+const VH = window.innerHeight;
 
+gsap.set('.bg-grid',     { transformPerspective: 500, rotationX: 45, y: 0 });
+gsap.set('#logo',        { xPercent: -50, yPercent: -50, scale: 1.2, opacity: 0 });
+gsap.set('.mask-text',   { y: '110%', opacity: 0, scale: 0.95 });
+gsap.set('.t-member',    { x: -30, opacity: 0, scale: 0.97 });
+gsap.set('.bl-outline',  { strokeDashoffset: 1 });
+gsap.set('.bl-fill',     { opacity: 0 });
+gsap.set('#flash-fx',    { opacity: 0 });
+gsap.set('.accent-line', { scaleX: 0 });
+gsap.set('#progress-bar',{ opacity: 0, scaleX: 0 });
+gsap.set('#scene-sweep', { x: -100, opacity: 0 });
+gsap.set('.pulse-ring',  { xPercent: -50, yPercent: -50, scale: 1, opacity: 0 });
+
+// Orbs: posiciones adaptativas al viewport
+gsap.set('#orb-1', { x: VW * -0.12, y: VH * 0.1,  opacity: 0 });
+gsap.set('#orb-2', { x: VW *  0.55, y: VH * 0.42, opacity: 0 });
+
+// ════════════════════════════════════════════════════════════
+//  PARALLAX DE RATÓN — profundidad 3D interactiva
+// ════════════════════════════════════════════════════════════
+document.addEventListener('mousemove', (e) => {
+    const mx = (e.clientX / VW - 0.5);
+    const my = (e.clientY / VH - 0.5);
+    gsap.to('#orb-1', { x: VW * -0.12 + mx * 50, y: VH * 0.1  + my * 35, duration: 2.0, ease: 'power2.out', overwrite: 'auto' });
+    gsap.to('#orb-2', { x: VW *  0.55 + mx * -32, y: VH * 0.42 + my * -24, duration: 2.5, ease: 'power2.out', overwrite: 'auto' });
+    gsap.to('.bg-grid', { x: mx * 18, duration: 2.2, ease: 'power2.out', overwrite: 'auto' });
+});
+
+// ════════════════════════════════════════════════════════════
+//  PARTÍCULAS FLOTANTES — adaptativo al viewport
+// ════════════════════════════════════════════════════════════
+function initParticles() {
+    const container = document.querySelector('.video-container');
+    const colors = [
+        'rgba(5,139,223,0.7)',
+        'rgba(204,255,0,0.55)',
+        'rgba(255,255,255,0.35)'
+    ];
+    // Cantidad adaptativa: más partículas en pantallas grandes
+    const count = Math.round(gsap.utils.clamp(10, 20, VW / 28));
+
+    for (let i = 0; i < count; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        const size = (Math.random() * 2.5 + 0.8) + 'px';
+        p.style.cssText = `width:${size}; height:${size}; background:${colors[i % colors.length]};`;
+        container.appendChild(p);
+
+        const sx = Math.random() * Math.min(480, VW);
+        const sy = VH * (0.15 + Math.random() * 0.85);
+        const rise = VH * (0.35 + Math.random() * 0.5);
+        const drift = (Math.random() - 0.5) * 70;
+        const dur  = 8 + Math.random() * 11;
+
+        gsap.set(p, { x: sx, y: sy, opacity: 0 });
+
+        gsap.to(p, {
+            y: sy - rise,
+            x: sx + drift,
+            opacity: gsap.utils.random(0.05, 0.38),
+            duration: dur,
+            delay: Math.random() * 10,
+            repeat: -1,
+            ease: 'none',
+            onRepeat() {
+                gsap.set(this.targets()[0], {
+                    y: VH * (0.7 + Math.random() * 0.35),
+                    x: Math.random() * Math.min(480, VW),
+                    opacity: 0
+                });
+            }
+        });
+    }
+}
+
+// ════════════════════════════════════════════════════════════
+//  BARRIDO DE LUZ — marca visualmente cada cambio de escena
+// ════════════════════════════════════════════════════════════
+function sweep(tl, at) {
+    tl.set('#scene-sweep', { x: -100, opacity: 0 }, at - 0.02);
+    tl.to('#scene-sweep',  { x: VW + 100, opacity: 1, duration: 0.45, ease: 'expo.out' }, at);
+    tl.to('#scene-sweep',  { opacity: 0, duration: 0.12, ease: 'none' }, at + 0.35);
+}
+
+// ════════════════════════════════════════════════════════════
+//  BOTÓN DE INICIO
+// ════════════════════════════════════════════════════════════
 document.getElementById('start-btn').addEventListener('click', () => {
 
-    // Desvanece la pantalla de inicio
     gsap.to('#start-screen', {
         opacity: 0, duration: 0.5, ease: 'power4.out',
         onComplete: () => { document.getElementById('start-screen').style.display = 'none'; }
     });
 
-    const H = window.innerHeight;
-    const t = gsap.timeline();
+    initParticles();
 
-    // Grid pan — tween separado: repeat:-1 dentro del timeline haría duration=Infinity
-    t.call(() => {
+    const H = window.innerHeight;
+    const tl = gsap.timeline();
+
+    // ── Tweens independientes (loops ambientales, NO dentro del timeline) ──
+    tl.call(() => {
+        // Grid pan infinito
         gsap.to('.bg-grid', { y: 50, duration: 20, repeat: -1, ease: 'none' });
+
+        // Flotación suave de los orbs
+        gsap.to('#orb-1', { y: VH * 0.1 + H * 0.06, duration: 7,  repeat: -1, yoyo: true, ease: 'sine.inOut' });
+        gsap.to('#orb-2', { y: VH * 0.42 - H * 0.05, duration: 9, repeat: -1, yoyo: true, ease: 'sine.inOut' });
     }, null, 0);
 
-    // Barra de progreso (32s = duración total de la animación)
-    t.to('#progress-bar', { opacity: 1, duration: 0.3, ease: 'none' }, 0);
-    t.to('#progress-bar', { scaleX: 1, duration: 32, ease: 'none' }, 0);
+    // ── Barra de progreso (32s = duración total) ──
+    tl.to('#progress-bar', { opacity: 1, duration: 0.3, ease: 'none' }, 0);
+    tl.to('#progress-bar', { scaleX: 1, duration: 32, ease: 'none' }, 0);
 
-    // ── t=0.3: Logo aparece centrado + SVG se dibuja ──
-    t.to('#logo', { opacity: 1, scale: 1, duration: 1.5, ease: 'power4.out' }, 0.3);
-    t.to('.bl-outline', { strokeDashoffset: 0, duration: 2.5, ease: 'power4.out' }, 0.3);
-    t.to('.bl-outline', { opacity: 0, duration: 0.5, ease: 'power4.out' }, 2.5);
-    t.to('.bl-fill',    { opacity: 1, duration: 1.5, ease: 'power4.out' }, 2.5);
+    // ── t=0.3 — Orbs aparecen + Logo + SVG se dibuja ──
+    tl.to(['#orb-1', '#orb-2'], { opacity: 1, duration: 2.5, ease: 'power4.out' }, 0.3);
+    tl.to('#logo',       { opacity: 1, scale: 1, duration: 1.5, ease: 'power4.out' }, 0.3);
+    tl.to('.bl-outline', { strokeDashoffset: 0, duration: 2.5, ease: 'power4.out' }, 0.3);
+    tl.to('.bl-outline', { opacity: 0, duration: 0.5, ease: 'power4.out' }, 2.5);
+    tl.to('.bl-fill',    { opacity: 1, duration: 1.5, ease: 'power4.out' }, 2.5);
 
-    // ── t=2.5: Escena 1 entra — Gancho (3 líneas stagger) ──
-    t.to('#s-1 .mask-text', {
-        y: 0, opacity: 1, duration: 1.0, stagger: 0.12, ease: 'power4.out'
+    // ── t=2.5 — Escena 1: Gancho (stagger + micro-scale) ──
+    tl.to('#s-1 .mask-text', {
+        y: 0, opacity: 1, scale: 1,
+        duration: 1.0, stagger: 0.13, ease: 'power4.out'
     }, 2.5);
 
-    // ── t=5.8: Escena 1 sale + Logo sube a header + Escena 2 entra ──
-    // Salida empieza 200ms antes del boundary → solapamiento intencional
-    t.to('#s-1 .mask-text', {
-        y: '-100%', opacity: 0, duration: 0.6, stagger: 0.08, ease: 'power4.in'
+    // ── t=5.8 — Sweep + Escena 1 sale + Logo sube + Escena 2 entra ──
+    sweep(tl, 5.75);
+    tl.to('#s-1 .mask-text', {
+        y: '-100%', opacity: 0, scale: 0.95,
+        duration: 0.6, stagger: 0.08, ease: 'power4.in'
     }, 5.8);
-    // Logo se mueve mientras la escena 1 aún está saliendo
-    t.to('#logo', {
+    tl.to('#logo', {
         xPercent: -50, yPercent: 0, y: -(H * 0.42),
         scale: 0.35, opacity: 0.8, duration: 1.8, ease: 'expo.inOut'
     }, 5.8);
-    // Escena 2: tagline → título → descripción (stagger natural = "contador primero")
-    t.to('#s-2 .mask-text', {
-        y: 0, opacity: 1, duration: 1.0, stagger: 0.12, ease: 'power4.out'
+    tl.to('#s-2 .mask-text', {
+        y: 0, opacity: 1, scale: 1,
+        duration: 1.0, stagger: 0.12, ease: 'power4.out'
     }, 6.0);
-    // Accent line entra mientras la descripción aún está llegando
-    t.to('#al-2', { scaleX: 1, duration: 0.6, ease: 'expo.inOut' }, 6.36);
+    tl.to('#al-2', { scaleX: 1, duration: 0.6, ease: 'expo.inOut' }, 6.36);
 
-    // ── t=9.8: Escena 2 sale + Escena 3 entra ──
-    t.to(['#s-2 .mask-text', '#al-2'], {
-        y: '-100%', opacity: 0, duration: 0.6, stagger: 0.08, ease: 'power4.in'
+    // Logo respira (pulso suave) mientras está en header
+    tl.call(() => {
+        gsap.to('#logo', { scale: 0.37, duration: 2.8, repeat: -1, yoyo: true, ease: 'sine.inOut' });
+    }, null, 7.8);
+
+    // Orb neon cobra protagonismo en escenas de servicio
+    tl.to('#orb-2', { opacity: 0.75, duration: 1.2, ease: 'power4.out' }, 6.1);
+
+    // ── t=9.8 — Sweep + Escena 2 sale + Escena 3 entra ──
+    sweep(tl, 9.75);
+    tl.to(['#s-2 .mask-text', '#al-2'], {
+        y: '-100%', opacity: 0, scale: 0.95,
+        duration: 0.6, stagger: 0.07, ease: 'power4.in'
     }, 9.8);
-    t.to('#s-3 .mask-text', {
-        y: 0, opacity: 1, duration: 1.0, stagger: 0.12, ease: 'power4.out'
+    tl.to('#s-3 .mask-text', {
+        y: 0, opacity: 1, scale: 1,
+        duration: 1.0, stagger: 0.12, ease: 'power4.out'
     }, 10.0);
-    t.to('#al-3', { scaleX: 1, duration: 0.6, ease: 'expo.inOut' }, 10.36);
+    tl.to('#al-3', { scaleX: 1, duration: 0.6, ease: 'expo.inOut' }, 10.36);
 
-    // ── t=13.8: Escena 3 sale + Escena 4 entra ──
-    t.to(['#s-3 .mask-text', '#al-3'], {
-        y: '-100%', opacity: 0, duration: 0.6, stagger: 0.08, ease: 'power4.in'
+    // Orb azul toma el relevo
+    tl.to('#orb-1', { opacity: 0.8, duration: 1.2, ease: 'power4.out' }, 10.1);
+    tl.to('#orb-2', { opacity: 0.35, duration: 1.2, ease: 'power4.out' }, 10.1);
+
+    // ── t=13.8 — Sweep + Escena 3 sale + Escena 4 entra ──
+    sweep(tl, 13.75);
+    tl.to(['#s-3 .mask-text', '#al-3'], {
+        y: '-100%', opacity: 0, scale: 0.95,
+        duration: 0.6, stagger: 0.07, ease: 'power4.in'
     }, 13.8);
-    t.to('#s-4 .mask-text', {
-        y: 0, opacity: 1, duration: 1.0, stagger: 0.12, ease: 'power4.out'
+    tl.to('#s-4 .mask-text', {
+        y: 0, opacity: 1, scale: 1,
+        duration: 1.0, stagger: 0.12, ease: 'power4.out'
     }, 14.0);
-    t.to('#al-4', { scaleX: 1, duration: 0.6, ease: 'expo.inOut' }, 14.36);
+    tl.to('#al-4', { scaleX: 1, duration: 0.6, ease: 'expo.inOut' }, 14.36);
+    tl.to(['#orb-1', '#orb-2'], { opacity: 0.45, duration: 1.0 }, 14.1);
 
-    // ── t=17.8: Escena 4 sale + Escena 5 entra (Equipo) ──
-    t.to(['#s-4 .mask-text', '#al-4'], {
-        y: '-100%', opacity: 0, duration: 0.6, stagger: 0.08, ease: 'power4.in'
+    // ── t=17.8 — Sweep + Escena 4 sale + Escena 5 entra (Equipo) ──
+    sweep(tl, 17.75);
+    tl.to(['#s-4 .mask-text', '#al-4'], {
+        y: '-100%', opacity: 0, scale: 0.95,
+        duration: 0.6, stagger: 0.07, ease: 'power4.in'
     }, 17.8);
-    // Tagline entra primero
-    t.to('#s-5 .mask-text', {
-        y: 0, opacity: 1, duration: 0.8, ease: 'power4.out'
+    tl.to('#s-5 .mask-text', {
+        y: 0, opacity: 1, scale: 1,
+        duration: 0.8, ease: 'power4.out'
     }, 18.0);
-    // Miembros del equipo entran desde la izquierda con stagger orgánico
-    t.to('.t-member', {
-        x: 0, opacity: 1, duration: 0.9, stagger: 0.18, ease: 'power4.out'
+    tl.to('.t-member', {
+        x: 0, opacity: 1, scale: 1,
+        duration: 0.9, stagger: 0.18, ease: 'power4.out'
     }, 18.4);
+    tl.to(['#orb-1', '#orb-2'], { opacity: 0.55, duration: 1.5 }, 18.0);
 
-    // ── t=23.7: Escena 5 sale + CLÍMAX ──
-    t.to('#s-5 .mask-text', {
+    // ── t=23.3 — Preparar clímax: matar breathing del logo ──
+    tl.call(() => { gsap.killTweensOf('#logo'); }, null, 23.3);
+
+    // ── t=23.7 — Escena 5 sale ──
+    tl.to('#s-5 .mask-text', {
         y: '-100%', opacity: 0, duration: 0.5, ease: 'power4.in'
     }, 23.7);
-    t.to('.t-member', {
-        x: 30, opacity: 0, duration: 0.4, stagger: 0.06, ease: 'power4.in'
+    tl.to('.t-member', {
+        x: 30, opacity: 0, scale: 0.95,
+        duration: 0.4, stagger: 0.06, ease: 'power4.in'
     }, 23.7);
 
-    // Flash de luz — peak instantáneo, caída suave
-    t.to('#flash-fx', { opacity: 1, duration: 0.15, ease: 'none' }, 24.0);
-    t.to('#flash-fx', { opacity: 0, duration: 1.5, ease: 'power4.out' }, 24.15);
+    // ── t=24.0 — CLÍMAX: flash + logo expande + anillos de pulso ──
+    tl.to('#flash-fx', { opacity: 1, duration: 0.12, ease: 'none' }, 24.0);
+    tl.to('#flash-fx', { opacity: 0, duration: 1.6,  ease: 'power4.out' }, 24.12);
 
-    // Logo se expande al clímax mientras el flash aún se desvanece (expo.inOut = dramático)
-    t.to('#logo', {
+    // Logo al clímax — expo.inOut para dramatismo máximo
+    tl.to('#logo', {
         xPercent: -50, yPercent: 0, y: -(H * 0.35),
         scale: 0.65, opacity: 1, duration: 2.0, ease: 'expo.inOut'
     }, 24.0);
 
-    // Escena 6 entra escalonada: PRÓXIMAMENTE → fecha → web → redes → tagline
-    t.to('#s-6 .mask-text', {
-        y: 0, opacity: 1, duration: 1.0, stagger: 0.12, ease: 'power4.out'
+    // Anillos de pulso desde el logo — ondas concéntricas
+    tl.fromTo('#pr-1',
+        { xPercent: -50, yPercent: -50, y: -(H * 0.35), scale: 1, opacity: 0.65 },
+        { scale: 8, opacity: 0, duration: 2.2, ease: 'power2.out' }, 24.1);
+    tl.fromTo('#pr-2',
+        { xPercent: -50, yPercent: -50, y: -(H * 0.35), scale: 1, opacity: 0.5 },
+        { scale: 11, opacity: 0, duration: 2.8, ease: 'power2.out' }, 24.4);
+    tl.fromTo('#pr-3',
+        { xPercent: -50, yPercent: -50, y: -(H * 0.35), scale: 1, opacity: 0.35 },
+        { scale: 15, opacity: 0, duration: 3.4, ease: 'power2.out' }, 24.7);
+
+    // Orbs se reposicionan para enmarcar la escena final
+    tl.to('#orb-1', { x: VW * -0.02, y: VH * 0.55, opacity: 0.9, duration: 3.0, ease: 'expo.inOut' }, 24.0);
+    tl.to('#orb-2', { x: VW *  0.48, y: VH * 0.05, opacity: 0.7, duration: 3.0, ease: 'expo.inOut' }, 24.0);
+
+    // ── t=24.6 — Escena 6 entra: escalonada con micro-scale ──
+    tl.to('#s-6 .mask-text', {
+        y: 0, opacity: 1, scale: 1,
+        duration: 1.0, stagger: 0.13, ease: 'power4.out'
     }, 24.6);
 });
 </script>
